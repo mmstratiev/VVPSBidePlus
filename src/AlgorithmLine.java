@@ -1,8 +1,7 @@
 import java.util.ArrayList;
 
 public class AlgorithmLine {
-
-    ArrayList<Integer> Values;
+    private ArrayList<Integer> Values;
 
     AlgorithmLine(){
         Values = new ArrayList<>();

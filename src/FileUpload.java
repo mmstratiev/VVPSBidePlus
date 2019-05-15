@@ -36,6 +36,7 @@ public class FileUpload {
                 if (parentFrame != null)
                 {
                     FileDialog fileDialog = new java.awt.FileDialog(parentFrame, "Choose a file:", FileDialog.LOAD);
+                    fileDialog.setFile("*.csv");
                     fileDialog.setVisible(true);
 
                     String selectedFile = fileDialog.getFile();
@@ -135,7 +136,7 @@ public class FileUpload {
                                 desktop.open(new File(outputFilename));
                             } catch (Exception fileEx) {
                                 JOptionPane.showMessageDialog(null,
-                                        "An error occured while opening the output file. ERROR MESSAGE = " + e.toString(), "Error",
+                                        "An error occured while opening the output file.", "Error",
                                         JOptionPane.ERROR_MESSAGE);
                             }
                         }
@@ -143,16 +144,16 @@ public class FileUpload {
                         RunButton.setEnabled(false);
                         ex.printStackTrace();
                         JOptionPane.showMessageDialog(null,
-                                "An error occured while creating the output file. ERROR MESSAGE = " + e.toString(), "Error",
+                                "An error occured while creating the output file.", "Error",
                                 JOptionPane.ERROR_MESSAGE);
                     }
                 }
-                catch (IOException ex){
+                catch (IOException|IllegalArgumentException ex){
                     RunButton.setEnabled(false);
 
                     ex.printStackTrace();
                     JOptionPane.showMessageDialog(null,
-                            "An error occured opening the input file. ERROR MESSAGE = " + e.toString(), "Error",
+                            "An error occured opening the input file.", "Error",
                             JOptionPane.ERROR_MESSAGE);
                 }
             }
