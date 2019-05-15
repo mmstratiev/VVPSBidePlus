@@ -40,7 +40,7 @@ public class FileUpload {
                     fileDialog.setVisible(true);
 
                     String selectedFile = fileDialog.getFile();
-                    if( selectedFile != null)
+                    if(selectedFile != null)
                     {
                         FilePath = fileDialog.getDirectory() + selectedFile;
                         FileNameLabel.setText(selectedFile);
@@ -117,9 +117,8 @@ public class FileUpload {
 
                     // execute the algorithm
                     try {
-                        double minsup = 0.4;
                         try {
-                            minsup = Double.parseDouble(MinsupField.getText());
+                            Double.parseDouble(MinsupField.getText());
                         } catch (NumberFormatException numEx) {
                             MinsupField.setText(Double.toString(0.4));
                         }
