@@ -27,6 +27,71 @@ public class FileUpload {
 
     private String FilePath;
 
+    public String GetParsedCSV(String csvfilePath) throws IOException, IllegalArgumentException {
+        Reader reader = Files.newBufferedReader(Paths.get(csvfilePath));
+        CSVParser csvParser = new CSVParser(reader, CSVFormat.DEFAULT
+                .withFirstRecordAsHeader()
+                .withIgnoreHeaderCase()
+                .withTrim());
+
+
+        // read log file
+        HashMap<String, Integer> eventToIndex = new HashMap<>();
+        HashMap<String, AlgorithmLine> algorithmLines = new HashMap<>();
+
+        String lastIP = "";
+        Integer lastEventIndex = 1;
+
+        for (CSVRecord csvRecord : csvParser) {
+            LogFileRow logFileRow = new LogFileRow(csvRecord);
+            Integer eventIndex = eventToIndex.putIfAbsent(logFileRow.GetEventName(), lastEventIndex);
+
+            if (eventIndex == null) {
+                eventIndex = lastEventIndex++;
+            }
+
+            String thisIP = logFileRow.GetIP();
+
+            AlgorithmLine algoLine = algorithmLines.get(thisIP);
+            if (algoLine == null) {
+                algoLine = new AlgorithmLine();
+                algorithmLines.put(thisIP, algoLine);
+            }
+
+            if (!lastIP.isEmpty() && !lastIP.equals(thisIP)) {
+                algoLine.AddNewItemSet(eventIndex);
+            } else {
+                algoLine.AddCurrentItemSet(eventIndex);
+            }
+
+            lastIP = thisIP;
+        }
+        reader.close();
+
+        // write convertedLog
+        String convertedLogFilename = ".//convertedLog.txt";
+        PrintWriter writer = new PrintWriter(convertedLogFilename, "UTF-8");
+
+        String itemString = "@ITEM=";
+        writer.println("@CONVERTED_FROM_TEXT");
+        writer.println(itemString + "-1=|"); // @ITEM=-1=|
+
+        for (HashMap.Entry<String, Integer> entry : eventToIndex.entrySet()) {
+            StringBuilder stringBuilder = new StringBuilder();
+
+            stringBuilder.append(itemString).append(entry.getValue()).append('=').append(entry.getKey());
+
+            writer.println(stringBuilder.toString());
+        }
+
+        for (HashMap.Entry<String, AlgorithmLine> entry : algorithmLines.entrySet()) {
+            writer.println(entry.getValue().toString());
+        }
+        writer.close();
+
+        return convertedLogFilename;
+    }
+
     public FileUpload() {
         ChooseButton.addActionListener(new ActionListener() {
             @Override
@@ -52,69 +117,8 @@ public class FileUpload {
         RunButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-
                 try {
-                    Reader reader = Files.newBufferedReader(Paths.get(FilePath));
-                    CSVParser csvParser = new CSVParser(reader, CSVFormat.DEFAULT
-                            .withFirstRecordAsHeader()
-                            .withIgnoreHeaderCase()
-                            .withTrim());
-
-                    // read log file
-                    HashMap<String, Integer> eventToIndex = new HashMap<>();
-                    HashMap<String, AlgorithmLine> algorithmLines = new HashMap<>();
-
-                    String lastIP = "";
-                    Integer lastEventIndex = 1;
-
-                    for (CSVRecord csvRecord : csvParser) {
-                        LogFileRow logFileRow = new LogFileRow(csvRecord);
-                        Integer eventIndex = eventToIndex.putIfAbsent(logFileRow.GetEventName(), lastEventIndex);
-
-                        if(eventIndex == null){
-                            eventIndex = lastEventIndex++;
-                        }
-
-                        String thisIP = logFileRow.GetIP();
-
-                        AlgorithmLine algoLine = algorithmLines.get(thisIP);
-                        if(algoLine == null){
-                            algoLine = new AlgorithmLine();
-                            algorithmLines.put(thisIP, algoLine);
-                        }
-
-                        if(!lastIP.isEmpty() && !lastIP.equals(thisIP)){
-                            algoLine.AddNewItemSet(eventIndex);
-                        }
-                        else{
-                            algoLine.AddCurrentItemSet(eventIndex);
-                        }
-
-                        lastIP = thisIP;
-                    }
-                    reader.close();
-
-                    // write convertedLog
-                    String convertedLogFilename = ".//convertedLog.txt";
-                    PrintWriter writer = new PrintWriter(convertedLogFilename, "UTF-8");
-
-                    String itemString = "@ITEM=";
-                    writer.println("@CONVERTED_FROM_TEXT");
-                    writer.println(itemString + "-1=|"); // @ITEM=-1=|
-
-                    for(HashMap.Entry<String, Integer> entry : eventToIndex.entrySet()){
-                        StringBuilder stringBuilder = new StringBuilder();
-
-                        stringBuilder.append(itemString).append(entry.getValue()).append('=').append(entry.getKey());
-
-                        writer.println(stringBuilder.toString());
-                    }
-
-                    for(HashMap.Entry<String, AlgorithmLine> entry : algorithmLines.entrySet()){
-                        writer.println(entry.getValue().toString());
-                    }
-                    writer.close();
-
+                    String convertedLogFilename = GetParsedCSV(FilePath);
                     // execute the algorithm
                     try {
                         try {
@@ -152,7 +156,7 @@ public class FileUpload {
 
                     ex.printStackTrace();
                     JOptionPane.showMessageDialog(null,
-                            "An error occured opening the input file.", "Error",
+                            "An error occured while opening the input file.", "Error",
                             JOptionPane.ERROR_MESSAGE);
                 }
             }
